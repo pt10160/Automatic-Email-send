@@ -1,67 +1,70 @@
+# 2023/8/1 更新 现在可以自动压缩测试文件再进行发送
+# 自动发邮件脚本 V1.0.1 
+# by Martin Li
+
 import os
 import smtplib
-from email.header import Header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+import pandas as pd
+import numpy as np
+import zipfile
+
+def zip_xml_files(folder_path, zip_file_name):
+    # 构建压缩文件的完整路径
+    zip_file_path = os.path.join(folder_path, zip_file_name)
+
+    # 创建一个新的zip文件
+    with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # 遍历文件夹中的所有文件
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                if file.endswith('.xml'):
+                    # 构建文件的完整路径
+                    file_path = os.path.join(root, file)
+                    # 将文件添加到zip压缩文件中
+                    zipf.write(file_path, os.path.relpath(file_path, folder_path))
+
+    print(f"XML files in '{folder_path}' have been zipped to '{zip_file_path}'.")
 
 # Using Netease 163 SMTP service
 mail_host = "smtp.163.com"  # SMTP server
 mail_user = "zeqili2001@163.com"  # Username
-mail_pass = "SLOVWAGHQRSWOEEO"  # Authorization password, not the login password
+mail_pass = "ZOIYZCITGVARKVRQ"  # Authorization password, not the login password
 
 sender = 'zeqili2001@163.com'  # Sender's email address (preferably full address, otherwise it may fail)
-receivers = ['zeqili2001@163.com']  # List of recipient email addresses
+receivers = ['wangmanli1@gacrnd.com']  # List of recipient email addresses
 
-title = '测试报告'  # Email subject
+title = '版本测试报告'  # Email subject
 
 attachment_folder = r'C:\\Users\\ROG\\Desktop\\autorepo'  # Folder containing the attachments
+file_path = r'C:\\Users\\ROG\\Desktop\\autorepo\\test_results.xlsx'  # Path to the Excel file
+tel = 'Tel: +86 13250231309'  # Tel number
+zip_name = 'test_file.zip'  # Name of the zip file
 
-def create_html_table():
-    # 创建表格数据
-    table_data = [
-        ['姓名', '年龄', '性别'],
-        ['John', '30', '男'],
-        ['Alice', '25', '女'],
-        ['Bob', '28', '男']
-    ]
+zip_xml_files(attachment_folder, zip_name)
 
-    # 设置表格样式
-    table_style = """
-    <style>
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-
-    th, td {
-      border: 1px solid black;
-      padding: 8px;
-      text-align: center;
-    }
-
-    th {
-      background-color: #808080;
-      color: white;
-    }
-
-    td {
-      background-color: #E0E0E0;
-    }
-    </style>
-    """
-
-    # 构建HTML表格
-    table_html = "<table>"
-    for row in table_data:
-        table_html += "<tr>"
-        for cell in row:
-            table_html += f"<td>{cell}</td>"
-        table_html += "</tr>"
-    table_html += "</table>"
-
-    return table_style + table_html
+def create_html_table(file_path):
+    # 读取Excel文件
+    df = pd.read_excel(file_path)
+    
+    # 获取最后六列非空列
+    last_six_columns = df.iloc[:, -6:].dropna(how='all', axis=1)
+    
+    # 如果没有非空列，则返回空字符串
+    if last_six_columns.empty:
+        return ""
+    
+    # 将NaN值和换行符替换为空白单元格
+    last_six_columns = last_six_columns.replace({np.nan: '', '\n': ''})
+    
+    # 生成HTML表格
+    html_table = last_six_columns.to_html(index=False)
+    
+    print("done")
+    return html_table
 
 def send_email():
     message = MIMEMultipart()
@@ -70,8 +73,8 @@ def send_email():
     message['Subject'] = title
 
     # Create HTML table
-    table_content = create_html_table()
-    content = '来自自动脚本：\n' + table_content
+    table_content = '各位好，这个是版本测试报告，请查收 <br><br>' + '测试结果如下 <br>' + create_html_table(file_path) + '<br>' + 'Best regards, <br>' + 'Zeqi Li 黎泽麒 <br>' + '广汽研究院 智能网联技术研发中心 智驾技术部<br>' + tel + '|' + sender
+    content = '来自自动脚本：<br>' + table_content
 
     # Add email content
     message.attach(MIMEText(content, 'html'))
@@ -82,13 +85,15 @@ def send_email():
     # Add attachments
     for filename in attachment_files:
         attachment_path = os.path.join(attachment_folder, filename)
-        with open(attachment_path, 'rb') as attachment_file:
-            part = MIMEBase('application', 'octet-stream')
-            part.set_payload(attachment_file.read())
+        if not filename.endswith('.xml'):
+            with open(attachment_path, 'rb') as attachment_file:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(attachment_file.read())
 
-        encoders.encode_base64(part)
-        part.add_header('Content-Disposition', 'attachment', filename=filename)
-        message.attach(part)
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', 'attachment', filename=filename)
+            message.attach(part)
+
 
     try:
         smtpObj = smtplib.SMTP_SSL(mail_host, 465)  # Enable SSL for secure connection, usually on port 465
@@ -99,4 +104,8 @@ def send_email():
         print(e)
 
 if __name__ == '__main__':
+    
     send_email()
+for file in file_path:
+    if file.endswith('.zip'):
+        os.remove(file)
