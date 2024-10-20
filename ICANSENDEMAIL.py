@@ -30,19 +30,19 @@ def zip_xml_files(folder_path, zip_file_name):
     print(f"XML files in '{folder_path}' have been zipped to '{zip_file_path}'.")
 
 # Using Netease 163 SMTP service
-mail_host = "smtp.163.com"  # SMTP server
-mail_user = "zeqili2001@163.com"  # Username
-mail_pass = "ZOIYZCITGVARKVRQ"  # Authorization password, not the login password
+mail_host = "smtp.aa.com"  # SMTP server
+mail_user = "--"  # Username
+mail_pass = "--"  # Authorization password, not the login password
 
-sender = 'zeqili2001@163.com'  # Sender's email address (preferably full address, otherwise it may fail)
-receivers = ['wangmanli1@gacrnd.com']  # List of recipient email addresses
+sender = '-'  # Sender's email address (preferably full address, otherwise it may fail)
+receivers = ['-']  # List of recipient email addresses
 
-title = '版本测试报告'  # Email subject
+title = '-'  # Email subject
 
-attachment_folder = r'C:\\Users\\ROG\\Desktop\\autorepo'  # Folder containing the attachments
-file_path = r'C:\\Users\\ROG\\Desktop\\autorepo\\test_results.xlsx'  # Path to the Excel file
-tel = 'Tel: +86 13250231309'  # Tel number
-zip_name = 'test_file.zip'  # Name of the zip file
+attachment_folder = r'-'  # Folder containing the attachments
+file_path = r'-'  # Path to the Excel file
+tel = '-'  # Tel number
+zip_name = '-'  # Name of the zip file
 
 zip_xml_files(attachment_folder, zip_name)
 
@@ -73,8 +73,8 @@ def send_email():
     message['Subject'] = title
 
     # Create HTML table
-    table_content = '各位好，这个是版本测试报告，请查收 <br><br>' + '测试结果如下 <br>' + create_html_table(file_path) + '<br>' + 'Best regards, <br>' + 'Zeqi Li 黎泽麒 <br>' + '广汽研究院 智能网联技术研发中心 智驾技术部<br>' + tel + '|' + sender
-    content = '来自自动脚本：<br>' + table_content
+    table_content = '<br><br>' + ' <br>' + create_html_table(file_path) + '<br>' + 'Best regards, <br>' + 'Zeqi Li 黎泽麒 <br>' + '<br>' + tel + '|' + sender
+    content = '<br>' + table_content
 
     # Add email content
     message.attach(MIMEText(content, 'html'))
